@@ -11,6 +11,7 @@ import { POSManager } from './components/POS/POSManager';
 
 const App: React.FC = () => {
   const [view, setView] = useState<'customer' | 'pos'>('customer');
+  const [posStarted, setPosStarted] = useState(false);
   const [config, setConfig] = useState<AppConfig | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,6 @@ const App: React.FC = () => {
   const [recommendedIds, setRecommendedIds] = useState<string[]>([]);
 
   useEffect(() => {
-    // Ruteo simple basado en query params
     const params = new URLSearchParams(window.location.search);
     if (params.get('view') === 'pos') {
       setView('pos');
@@ -83,11 +83,11 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (view === 'customer' && !showMenu && !showModalitySelector && config?.images.slideBackgrounds) {
+    if (!showMenu && !showModalitySelector && config?.images.slideBackgrounds) {
       const timer = setInterval(() => setCurrentSlide(s => (s + 1) % config.images.slideBackgrounds.length), 4000);
       return () => clearInterval(timer);
     }
-  }, [view, showMenu, showModalitySelector, config]);
+  }, [showMenu, showModalitySelector, config, view]);
 
   const addToCart = (item: MenuItem, selectedVariant?: ItemVariant) => {
     setCart(prev => {
@@ -122,10 +122,55 @@ const App: React.FC = () => {
     </div>
   );
 
+  // MODO POS CON PORTAL DE GESTIÓN
   if (view === 'pos') {
+    if (!posStarted) {
+      return (
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-[#1a1a1a] relative overflow-hidden">
+          {/* Fondo con Overlay oscuro */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-40 scale-110 blur-md transition-transform duration-[10s] ease-linear" 
+            style={{ backgroundImage: `url("${config!.images.slideBackgrounds[0]}")` }}
+          ></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/90"></div>
+          
+          <div className="relative z-10 text-center px-8 animate-zoom-in">
+            {/* Etiqueta POS */}
+            <div className="mb-10 inline-block animate-fade-in-up">
+               <span className="bg-[#fdd835] text-black text-[10px] font-black px-6 py-2.5 rounded-full uppercase tracking-[0.3em] mb-6 inline-block shadow-[0_10px_30px_rgba(253,216,53,0.3)]">
+                  POS DEL CHURRE - SISTEMA DE GESTIÓN
+               </span>
+               <img src={config!.images.logo} className="w-32 mx-auto mt-6 animate-float" alt="Logo Churre" />
+            </div>
+
+            <h1 className="text-white text-6xl md:text-8xl font-black brand-font mb-12 leading-none tracking-tighter">
+              EL CHURRE<br/>
+              <span className="text-[#fdd835]">MALCRIADO</span>
+            </h1>
+
+            {/* Botón Abrir Caja */}
+            <button 
+              onClick={() => setPosStarted(true)} 
+              className="group bg-[#e91e63] text-white px-16 py-7 rounded-[2.5rem] font-black text-xl shadow-[0_20px_50px_rgba(233,30,99,0.4)] border-2 border-white/20 hover:scale-105 active:scale-95 transition-all uppercase tracking-[0.2em] flex items-center gap-5 mx-auto btn-shine overflow-hidden relative"
+            >
+              <i className="fa-solid fa-cash-register text-2xl group-hover:rotate-12 transition-transform"></i>
+              Abrir Caja
+            </button>
+            
+            <button 
+              onClick={() => window.location.href = '/'}
+              className="mt-14 text-white/30 hover:text-white/60 text-[10px] font-black uppercase tracking-[0.4em] transition-colors flex items-center gap-3 mx-auto justify-center"
+            >
+              <i className="fa-solid fa-arrow-left"></i> Volver al modo cliente
+            </button>
+          </div>
+        </div>
+      );
+    }
     return <POSManager menu={config!.menu} categories={categories} config={config!} />;
   }
 
+  // MODO CLIENTE (RESTO DE LA APP)
   return (
     <div className="min-h-screen bg-white">
       {!showMenu && !showModalitySelector ? (
@@ -192,7 +237,7 @@ const App: React.FC = () => {
       )}
 
       {selectedItem && <ProductDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} onAddToCart={addToCart} />}
-      <Cart items={cart} onRemove={(id, vid) => setCart(prev => prev.filter(i => !(i.id === id && i.selectedVariant?.id === vid)))} onUpdateQuantity={(id, d, vid) => setCart(prev => prev.map(i => (i.id === id && i.selectedVariant?.id === vid) ? {...i, quantity: Math.max(1, i.quantity + d)} : i))} onClearCart={() => setCart([])} isOpen={isCartOpen} onToggle={() => setIsCartOpen(!isCartOpen)} initialModality={orderModality || 'pickup'} whatsappNumber={config!.whatsappNumber} paymentQr={config!.paymentQr} paymentName={config!.paymentName} />
+      <Cart items={cart} onRemove={(id, vid) => setCart(prev => prev.filter(i => !(i.id === id && i.selectedVariant?.id === vid)))} onUpdateQuantity={(id, d, vid) => setCart(prev => prev.map(i => (id === id && i.selectedVariant?.id === vid) ? {...i, quantity: Math.max(1, i.quantity + d)} : i))} onClearCart={() => setCart([])} isOpen={isCartOpen} onToggle={() => setIsCartOpen(!isCartOpen)} initialModality={orderModality || 'pickup'} whatsappNumber={config!.whatsappNumber} paymentQr={config!.paymentQr} paymentName={config!.paymentName} />
     </div>
   );
 };
