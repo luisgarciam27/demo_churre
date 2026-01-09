@@ -30,11 +30,15 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onAddToCart, o
           className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-8">
-            <span className="bg-white/20 backdrop-blur-xl text-white text-[11px] font-black uppercase px-8 py-3 rounded-2xl border border-white/30 tracking-[0.2em] w-full text-center">Detalles del Plato</span>
+            <span className="bg-white/20 backdrop-blur-xl text-white text-[11px] font-black uppercase px-8 py-3 rounded-2xl border border-white/30 tracking-[0.2em] w-full text-center">Ver detalles</span>
         </div>
         
         <div className="absolute top-6 left-6 flex flex-col gap-2">
-          {item.isPopular && (
+          {item.isCombo ? (
+            <span className="bg-[#e91e63] text-white text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-xl flex items-center gap-2 border border-white/20">
+              <i className="fa-solid fa-star text-yellow-300"></i> PROMOCIÓN
+            </span>
+          ) : item.isPopular && (
             <span className="bg-[#fdd835] text-[#e91e63] text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-xl">
               ¡Favorito!
             </span>
@@ -55,7 +59,7 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({ item, onAddToCart, o
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl font-black text-[#e91e63] tracking-tighter">S/ {item.price.toFixed(2)}</span>
             <span className="w-1 h-1 rounded-full bg-gray-200"></span>
-            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">Al Paso</span>
+            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{item.isCombo ? 'Ahorro' : 'Al Paso'}</span>
           </div>
           <p className="text-gray-400 text-sm leading-relaxed line-clamp-2 font-medium">{item.description}</p>
         </div>

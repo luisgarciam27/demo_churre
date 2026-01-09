@@ -45,12 +45,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ item, on
           <div className="w-full md:w-1/2 h-64 md:h-auto relative">
             <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden"></div>
+            {item.isCombo && (
+              <div className="absolute bottom-6 left-6">
+                <span className="bg-[#e91e63] text-white text-[10px] font-black px-6 py-2 rounded-full uppercase tracking-[0.2em] shadow-2xl border border-white/20">Combo Ahorro</span>
+              </div>
+            )}
           </div>
 
           <div className="w-full md:w-1/2 p-8 md:p-10 flex flex-col justify-center">
             <div className="mb-2">
               <span className="text-[#e91e63] text-[10px] font-black uppercase tracking-[0.3em] bg-pink-50 px-3 py-1 rounded-full">
-                {item.category}
+                {item.isCombo ? 'Promoción Especial' : item.category}
               </span>
             </div>
             
@@ -61,6 +66,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ item, on
             <p className="text-gray-500 text-sm md:text-base leading-relaxed mb-6">
               {item.description}
             </p>
+
+            {/* LISTA DEL COMBO */}
+            {item.isCombo && item.comboItems && item.comboItems.length > 0 && (
+              <div className="mb-8 bg-gray-50 p-6 rounded-[2rem] border border-dashed border-gray-200">
+                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-4 block">Este combo incluye:</label>
+                <ul className="space-y-2">
+                  {item.comboItems.map((ci, i) => (
+                    <li key={i} className="flex items-center gap-3 text-xs font-bold text-gray-700">
+                      <i className="fa-solid fa-circle-check text-[#e91e63]"></i>
+                      {ci}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             {/* SELECTOR DE VARIANTES */}
             {item.variants && item.variants.length > 0 && (
@@ -83,7 +103,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ item, on
 
             <div className="mt-auto flex items-center justify-between gap-6 pt-6 border-t border-gray-50">
               <div className="flex flex-col">
-                <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Precio</span>
+                <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Precio Final</span>
                 <span className="text-3xl font-black text-[#e91e63]">S/ {currentPrice.toFixed(2)}</span>
               </div>
 
