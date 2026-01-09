@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MenuItem, Category, CashSession, CartItem } from '../../types';
 import { supabase } from '../../services/supabaseClient';
 
@@ -40,7 +40,7 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
     setIsProcessing(true);
     
     try {
-      const { data, error } = await supabase.from('orders').insert({
+      const { error } = await supabase.from('orders').insert({
         customer_name: "Venta Directa",
         customer_phone: "POS",
         items: cart.map(i => ({ name: i.name, quantity: i.quantity, price: i.price })),
@@ -51,17 +51,18 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
         payment_method: paymentMethod,
         order_origin: 'Local',
         session_id: session.id
-      }).select().single();
+      });
 
       if (!error) {
-        // Actualizar totales de la sesión
         await supabase.rpc('increment_session_sales', { session_id: session.id, amount: total });
         setCart([]);
         onOrderComplete();
         alert("¡Venta Realizada!");
+      } else {
+        throw error;
       }
-    } catch (e) {
-      alert("Error al procesar la venta");
+    } catch (e: any) {
+      alert("Error al procesar la venta: " + e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -71,9 +72,8 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
     .filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="h-full flex overflow-hidden">
-      {/* Product Selection */}
-      <div className="flex-1 flex flex-col bg-white border-r border-slate-100">
+    <div className="h-full flex overflow-hidden bg-white">
+      <div className="flex-1 flex flex-col border-r border-slate-100">
         <div className="p-6 bg-slate-50/50 border-b border-slate-100 flex gap-4 items-center">
           <div className="relative flex-1">
              <i className="fa-solid fa-magnifying-glass absolute left-5 top-1/2 -translate-y-1/2 text-slate-300"></i>
@@ -98,7 +98,7 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
             <button 
               key={item.id} 
               onClick={() => addToCart(item)}
-              className="group bg-white border border-slate-100 p-5 rounded-[2.5rem] flex flex-col items-center text-center gap-3 hover:shadow-xl hover:shadow-slate-200/50 hover:border-pink-50 transition-all active:scale-95 text-slate-700"
+              className="group bg-white border border-slate-100 p-5 rounded-[2.5rem] flex flex-col items-center text-center gap-3 hover:shadow-xl hover:shadow-slate-200/50 transition-all active:scale-95 text-slate-700"
             >
               <div className="w-20 h-20 rounded-3xl overflow-hidden mb-1 shadow-inner bg-slate-50">
                 <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -110,7 +110,6 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
         </div>
       </div>
 
-      {/* Cart & Payment */}
       <div className="w-[400px] flex flex-col bg-slate-50">
         <div className="p-8 border-b border-slate-200 flex justify-between items-center">
           <div>
@@ -128,16 +127,16 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
                 <p className="text-[10px] font-black text-[#e91e63] uppercase">S/ {item.price.toFixed(2)} c/u</p>
               </div>
               <div className="flex items-center gap-3">
-                 <button onClick={() => updateQty(item.id, -1)} className="w-8 h-8 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-100 transition-all"><i className="fa-solid fa-minus text-[10px]"></i></button>
+                 <button onClick={() => updateQty(item.id, -1)} className="w-8 h-8 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-100"><i className="fa-solid fa-minus text-[10px]"></i></button>
                  <span className="w-6 text-center font-black text-slate-700 text-sm">{item.quantity}</span>
-                 <button onClick={() => updateQty(item.id, 1)} className="w-8 h-8 rounded-xl bg-[#e91e63] text-white flex items-center justify-center shadow-lg shadow-pink-100 transition-all"><i className="fa-solid fa-plus text-[10px]"></i></button>
+                 <button onClick={() => updateQty(item.id, 1)} className="w-8 h-8 rounded-xl bg-[#e91e63] text-white flex items-center justify-center shadow-lg shadow-pink-100"><i className="fa-solid fa-plus text-[10px]"></i></button>
               </div>
             </div>
           ))}
           {cart.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center opacity-30 text-center py-20">
-               <i className="fa-solid fa-cart-shopping text-5xl mb-6"></i>
-               <p className="font-black text-[10px] uppercase tracking-widest">Esperando Pedido...</p>
+               <i className="fa-solid fa-cart-shopping text-5xl mb-6 text-slate-300"></i>
+               <p className="font-black text-[10px] uppercase tracking-widest text-slate-400">Esperando Pedido...</p>
             </div>
           )}
         </div>
@@ -154,12 +153,10 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
               </button>
             ))}
           </div>
-
           <div className="flex justify-between items-center px-2">
             <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total a Pagar</span>
             <span className="text-4xl font-black text-slate-900 tracking-tighter">S/ {total.toFixed(2)}</span>
           </div>
-
           <button 
             disabled={cart.length === 0 || isProcessing}
             onClick={handleProcessOrder}

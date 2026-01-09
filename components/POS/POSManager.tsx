@@ -23,42 +23,60 @@ export const POSManager: React.FC<POSManagerProps> = ({ menu, categories, config
 
   const checkActiveSession = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('cash_sessions')
-      .select('*')
-      .eq('status', 'open')
-      .single();
-    
-    if (data) setSession(data as CashSession);
-    setLoading(false);
+    try {
+      const { data } = await supabase
+        .from('cash_sessions')
+        .select('*')
+        .eq('status', 'open')
+        .maybeSingle();
+      
+      if (data) setSession(data as CashSession);
+      else setSession(null);
+    } catch (e) {
+      console.error("Session Check Error:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOpenShift = async (amount: number, user: string) => {
-    const { data, error } = await supabase
-      .from('cash_sessions')
-      .insert({
-        opening_balance: amount,
-        user_name: user,
-        status: 'open'
-      })
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('cash_sessions')
+        .insert({
+          opening_balance: amount,
+          user_name: user,
+          status: 'open'
+        })
+        .select()
+        .single();
 
-    if (data) setSession(data as CashSession);
+      if (data) setSession(data as CashSession);
+      if (error) throw error;
+    } catch (e: any) {
+      alert("Error al abrir turno: " + e.message);
+    }
   };
 
   const handleCloseShift = async (closingBalance: number) => {
     if (!session) return;
-    const { error } = await supabase
-      .from('cash_sessions')
-      .update({
-        status: 'closed',
-        closed_at: new Date().toISOString(),
-        closing_balance: closingBalance
-      })
-      .eq('id', session.id);
-    
-    if (!error) setSession(null);
+    try {
+      const { error } = await supabase
+        .from('cash_sessions')
+        .update({
+          status: 'closed',
+          closed_at: new Date().toISOString(),
+          closing_balance: closingBalance
+        })
+        .eq('id', session.id);
+      
+      if (!error) {
+        setSession(null);
+        alert("Turno cerrado correctamente.");
+      } else throw error;
+    } catch (e: any) {
+      alert("Error al cerrar turno: " + e.message);
+    }
   };
 
   if (loading) return (
@@ -103,11 +121,11 @@ export const POSManager: React.FC<POSManagerProps> = ({ menu, categories, config
               <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Caja Actual</p>
               <p className="text-lg font-black text-[#e91e63] leading-none">S/ {(session.opening_balance + session.total_sales + session.total_entry - session.total_exit).toFixed(2)}</p>
            </div>
-           <button onClick={() => window.location.href = '/'} className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-100"><i className="fa-solid fa-arrow-right-from-bracket"></i></button>
+           <button onClick={() => window.location.href = '/'} className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-slate-100" title="Volver al Menú"><i className="fa-solid fa-arrow-right-from-bracket"></i></button>
         </div>
       </header>
 
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden bg-white">
         {view === 'cashier' ? (
           <POSCashier menu={menu} categories={categories} session={session} onOrderComplete={checkActiveSession} />
         ) : (
