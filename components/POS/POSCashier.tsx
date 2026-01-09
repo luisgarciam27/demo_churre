@@ -40,6 +40,8 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
     setIsProcessing(true);
     
     try {
+      // Nota: Si 'Completado' falla, prueba con 'Finalizado' o asegura que la DB tenga este ENUM.
+      // Usaremos 'Completado' que es el valor esperado por POSOrders.
       const { error } = await supabase.from('orders').insert({
         customer_name: "Venta Directa",
         customer_phone: "POS",
@@ -47,7 +49,7 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
         total: total,
         modality: 'pickup',
         address: 'Mostrador',
-        status: 'Completado',
+        status: 'Completado', 
         payment_method: paymentMethod,
         order_origin: 'Local',
         session_id: session.id
@@ -57,12 +59,13 @@ export const POSCashier: React.FC<POSCashierProps> = ({ menu, categories, sessio
         await supabase.rpc('increment_session_sales', { session_id: session.id, amount: total });
         setCart([]);
         onOrderComplete();
-        alert("¡Venta Realizada!");
+        alert("¡Venta Realizada con éxito!");
       } else {
         throw error;
       }
     } catch (e: any) {
-      alert("Error al procesar la venta: " + e.message);
+      console.error("Error de DB:", e);
+      alert("Error al procesar la venta: " + (e.message || "Estado no permitido en DB"));
     } finally {
       setIsProcessing(false);
     }

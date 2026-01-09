@@ -5,6 +5,8 @@ import { supabase } from '../../services/supabaseClient';
 import { POSShiftOpening } from './POSShiftOpening';
 import { POSCashier } from './POSCashier';
 import { POSDashboard } from './POSDashboard';
+import { POSInventory } from './POSInventory';
+import { POSOrders } from './POSOrders';
 
 interface POSManagerProps {
   menu: MenuItem[];
@@ -14,7 +16,7 @@ interface POSManagerProps {
 
 export const POSManager: React.FC<POSManagerProps> = ({ menu, categories, config }) => {
   const [session, setSession] = useState<CashSession | null>(null);
-  const [view, setView] = useState<'cashier' | 'dashboard'>('cashier');
+  const [view, setView] = useState<'cashier' | 'orders' | 'dashboard' | 'inventory'>('cashier');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -104,15 +106,28 @@ export const POSManager: React.FC<POSManagerProps> = ({ menu, categories, config
         <nav className="flex bg-slate-100 p-1 rounded-2xl">
           <button 
             onClick={() => setView('cashier')}
-            className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'cashier' ? 'bg-white text-[#e91e63] shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${view === 'cashier' ? 'bg-white text-[#e91e63] shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
           >
-            Venta Directa
+            Venta
+          </button>
+          <button 
+            onClick={() => setView('orders')}
+            className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${view === 'orders' ? 'bg-white text-[#e91e63] shadow-md' : 'text-slate-400 hover:text-slate-600'} relative`}
+          >
+            Pedidos Web
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-pink-500 rounded-full animate-pulse border-2 border-white"></span>
           </button>
           <button 
             onClick={() => setView('dashboard')}
-            className={`px-8 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${view === 'dashboard' ? 'bg-white text-[#e91e63] shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${view === 'dashboard' ? 'bg-white text-[#e91e63] shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
           >
-            Cierre y Arqueo
+            Caja
+          </button>
+          <button 
+            onClick={() => setView('inventory')}
+            className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${view === 'inventory' ? 'bg-white text-[#e91e63] shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+          >
+            Inventario
           </button>
         </nav>
 
@@ -128,8 +143,12 @@ export const POSManager: React.FC<POSManagerProps> = ({ menu, categories, config
       <main className="flex-1 overflow-hidden bg-white">
         {view === 'cashier' ? (
           <POSCashier menu={menu} categories={categories} session={session} onOrderComplete={checkActiveSession} />
-        ) : (
+        ) : view === 'orders' ? (
+          <POSOrders />
+        ) : view === 'dashboard' ? (
           <POSDashboard session={session} onCloseShift={handleCloseShift} onRefresh={checkActiveSession} />
+        ) : (
+          <POSInventory menu={menu} categories={categories} />
         )}
       </main>
     </div>
