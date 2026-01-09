@@ -19,52 +19,33 @@ export interface MenuItem {
   image: string;
   note?: string;
   isPopular?: boolean;
-  isCombo?: boolean;
-  comboItems?: string[];
   tags?: string[];
-  variants?: ItemVariant[]; 
+  variants?: ItemVariant[]; // Lista opcional de variantes
 }
 
 export interface CartItem extends MenuItem {
   quantity: number;
-  selectedVariant?: ItemVariant; 
+  selectedVariant?: ItemVariant; // Variante específica seleccionada
+}
+
+export interface AppImagesConfig {
+  logo: string;
+  menuLogo: string;
+  selectorLogo: string;
+  aiAvatar: string;
+  slideBackgrounds: string[];
+  menuBackground: string;
+}
+
+export interface SocialMedia {
+  facebook: string;
+  instagram: string;
+  tiktok: string;
 }
 
 export interface AppConfig {
-  images: {
-    logo: string;
-    menuLogo: string;
-    selectorLogo: string;
-    aiAvatar: string;
-    slideBackgrounds: string[];
-    menuBackground: string;
-  };
+  images: AppImagesConfig;
   menu: MenuItem[];
   whatsappNumber: string;
-  socialMedia: { facebook: string; instagram: string; tiktok: string; };
-  paymentQr?: string;
-  paymentName?: string;
-}
-
-// POS Types
-export interface CashSession {
-  id: number;
-  opened_at: string;
-  closed_at?: string;
-  opening_balance: number;
-  closing_balance?: number;
-  total_sales: number;
-  total_entry: number;
-  total_exit: number;
-  status: 'open' | 'closed';
-  user_name: string;
-}
-
-export interface CashTransaction {
-  id: number;
-  session_id: number;
-  type: 'entry' | 'exit';
-  amount: number;
-  reason: string;
-  created_at: string;
+  socialMedia: SocialMedia;
 }
